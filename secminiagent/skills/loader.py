@@ -43,6 +43,16 @@ class SkillLoader:
             selected.extend(skill for skill in all_skills if skill.name == "dependency_audit")
         if "security" in lowered or "audit" in lowered or "review" in lowered:
             selected.extend(skill for skill in all_skills if skill.name == "code_security_review")
+        if any(word in lowered for word in ["industrial", "ot", "ics", "plc", "scada", "threat", "工控", "工业"]):
+            selected.extend(skill for skill in all_skills if skill.name == "industrial_threat_analysis")
+        if any(word in lowered for word in ["alert", "ids", "firewall", "告警"]):
+            selected.extend(skill for skill in all_skills if skill.name == "alert_triage")
+        if any(word in lowered for word in ["ioc", "indicator", "威胁情报"]):
+            selected.extend(skill for skill in all_skills if skill.name == "ioc_hunting")
+        if any(word in lowered for word in ["asset risk", "asset inventory", "资产", "风险"]):
+            selected.extend(skill for skill in all_skills if skill.name == "ot_asset_risk_review")
+        if any(word in lowered for word in ["incident", "response", "应急", "事件"]):
+            selected.extend(skill for skill in all_skills if skill.name == "incident_response")
         unique: dict[str, Skill] = {}
         for skill in selected:
             unique[skill.name] = skill

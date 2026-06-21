@@ -6,5 +6,12 @@ __pycache__/
 .secminiagent/sessions/
 .secminiagent/reports/
 *.py[cod]
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
 plan.md
 README-v1.md

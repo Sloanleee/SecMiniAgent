@@ -1,0 +1,7 @@
+asset_id,name,ip,asset_type,zone,owner,criticality,protocols,vendor,model,version
+asset-plc-1,Line1 PLC,172.16.20.10,PLC,production,OT,high,"Modbus,S7comm",Siemens,S7-1500,V2.9
+asset-hmi-1,Line1 HMI,172.16.20.20,HMI,production,OT,high,OPC UA,Wonderware,HMI-01,2024.1
+asset-eng-1,Engineering Station,172.16.30.15,ENGINEERING_STATION,control,OT,high,"S7comm,OPC UA",Dell,Precision,Windows10
+asset-jump-1,OT Jump Host,172.16.10.5,SERVER,dmz,IT,medium,RDP,Microsoft,Windows Server,2022
+asset-user-1,Office Workstation,10.10.5.23,WORKSTATION,office,IT,medium,HTTP,Dell,OptiPlex,Windows11
+asset-fw-1,Plant Firewall,172.16.1.1,FIREWALL,dmz,NetSec,high,Syslog,Fortinet,FG-100F,7.2

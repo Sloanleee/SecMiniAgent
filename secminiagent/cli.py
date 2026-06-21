@@ -25,6 +25,18 @@ from .tools.registry import ToolRegistry
 from .tools.search_tool import SearchCodeTool
 from .tools.security_tools import GenerateSecurityReportTool, ScanDependencyFilesTool, ScanInsecurePatternsTool, ScanSecretsTool
 from .tools.shell_tool import RunShellTool
+from .tools.threat_tools import (
+    AnalyzeAssetRiskTool,
+    CorrelateAlertsTool,
+    DetectBruteforceTool,
+    DetectLateralMovementTool,
+    DetectSuspiciousOtAccessTool,
+    ExtractIocsTool,
+    GenerateThreatReportTool,
+    MatchIocsTool,
+    ParseAlertsTool,
+    ParseAssetsTool,
+)
 
 
 PROVIDERS = ("fake", "openai", "volcengine", "xfyun")
@@ -63,6 +75,16 @@ def build_registry() -> ToolRegistry:
     registry.register(ScanInsecurePatternsTool())
     registry.register(ScanDependencyFilesTool())
     registry.register(GenerateSecurityReportTool())
+    registry.register(ParseAssetsTool())
+    registry.register(ParseAlertsTool())
+    registry.register(ExtractIocsTool())
+    registry.register(MatchIocsTool())
+    registry.register(AnalyzeAssetRiskTool())
+    registry.register(CorrelateAlertsTool())
+    registry.register(DetectBruteforceTool())
+    registry.register(DetectLateralMovementTool())
+    registry.register(DetectSuspiciousOtAccessTool())
+    registry.register(GenerateThreatReportTool())
     registry.register(RunShellTool())
     registry.register(ApplyPatchTool())
     registry.register(WriteFileTool())

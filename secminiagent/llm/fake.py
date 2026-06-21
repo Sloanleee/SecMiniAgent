@@ -87,6 +87,34 @@ def _last_tool_result(messages: list[Message]) -> str | None:
 
 
 def _tool_call_for_prompt(prompt: str) -> ToolCall | None:
+    industrial_args = {
+        "assets_path": "examples/industrial/assets.csv",
+        "alerts_path": "examples/industrial/ids_alerts.json",
+        "ioc_path": "examples/industrial/ioc.txt",
+        "vuln_path": "examples/industrial/vulns.json",
+    }
+    if any(word in prompt for word in ["bruteforce", "brute force", "暴力", "爆破"]):
+        return ToolCall(
+            "fake_call_1",
+            "detect_bruteforce",
+            {"alerts_path": "examples/industrial/ids_alerts.json", "threshold": 3},
+        )
+    if any(word in prompt for word in ["lateral", "横向"]):
+        return ToolCall("fake_call_1", "detect_lateral_movement", industrial_args)
+    if any(word in prompt for word in ["suspicious ot", "可疑 ot", "可疑工业", "异常工业"]):
+        return ToolCall("fake_call_1", "detect_suspicious_ot_access", industrial_args)
+    if any(word in prompt for word in ["parse assets", "asset inventory", "资产清单"]):
+        return ToolCall("fake_call_1", "parse_assets", {"assets_path": "examples/industrial/assets.csv"})
+    if any(word in prompt for word in ["parse alerts", "alert json", "告警"]):
+        return ToolCall("fake_call_1", "parse_alerts", {"alerts_path": "examples/industrial/ids_alerts.json"})
+    if any(word in prompt for word in ["ioc", "indicator", "威胁情报"]):
+        return ToolCall(
+            "fake_call_1",
+            "match_iocs",
+            {"alerts_path": "examples/industrial/ids_alerts.json", "ioc_path": "examples/industrial/ioc.txt"},
+        )
+    if any(word in prompt for word in ["industrial", "ot", "ics", "plc", "scada", "firewall", "threat", "工控", "工业"]):
+        return ToolCall("fake_call_1", "generate_threat_report", industrial_args)
     if any(word in prompt for word in ["secret", "credential", "api key", "token", "password"]):
         return ToolCall("fake_call_1", "scan_secrets", {"path": "."})
     if "diff" in prompt or "git" in prompt:
@@ -106,8 +134,8 @@ def _summarize_tool_result(tool_result: str) -> str:
     if len(tool_result) > 4000:
         tool_result = tool_result[:4000] + "\n...[truncated]..."
     return (
-        "Local security analysis completed.\n\n"
+        "Local analysis completed.\n\n"
         "Tool result:\n"
         f"{tool_result}\n\n"
-        "Review the listed findings and rotate any exposed secrets before committing code."
+        "Review the listed findings, evidence, and recommended next actions before making operational changes."
     )

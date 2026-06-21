@@ -1,0 +1,81 @@
+{
+  "alerts": [
+    {
+      "alert_id": "ids-001",
+      "timestamp": "2026-06-21T09:00:00Z",
+      "source_ip": "10.10.5.23",
+      "destination_ip": "172.16.20.10",
+      "destination_port": 502,
+      "protocol": "tcp",
+      "rule_name": "modbus_write_attempt",
+      "severity": "high",
+      "message": "Office workstation attempted Modbus write access to PLC."
+    },
+    {
+      "alert_id": "ids-002",
+      "timestamp": "2026-06-21T09:01:10Z",
+      "source_ip": "10.10.5.23",
+      "destination_ip": "172.16.20.20",
+      "destination_port": 4840,
+      "protocol": "tcp",
+      "rule_name": "opcua_session_from_office",
+      "severity": "medium",
+      "message": "Office source opened OPC UA session to HMI."
+    },
+    {
+      "alert_id": "ids-003",
+      "timestamp": "2026-06-21T09:02:30Z",
+      "source_ip": "10.10.5.23",
+      "destination_ip": "172.16.30.15",
+      "destination_port": 102,
+      "protocol": "tcp",
+      "rule_name": "s7comm_access_from_office",
+      "severity": "medium",
+      "message": "Office source accessed engineering station over S7comm."
+    },
+    {
+      "alert_id": "ids-004",
+      "timestamp": "2026-06-21T09:10:00Z",
+      "source_ip": "203.0.113.50",
+      "destination_ip": "172.16.10.5",
+      "destination_port": 3389,
+      "protocol": "tcp",
+      "rule_name": "rdp_failed_login",
+      "severity": "high",
+      "message": "Repeated failed RDP login attempt."
+    },
+    {
+      "alert_id": "ids-005",
+      "timestamp": "2026-06-21T09:10:15Z",
+      "source_ip": "203.0.113.50",
+      "destination_ip": "172.16.10.5",
+      "destination_port": 3389,
+      "protocol": "tcp",
+      "rule_name": "rdp_failed_login",
+      "severity": "high",
+      "message": "Repeated failed RDP login attempt."
+    },
+    {
+      "alert_id": "ids-006",
+      "timestamp": "2026-06-21T09:10:31Z",
+      "source_ip": "203.0.113.50",
+      "destination_ip": "172.16.10.5",
+      "destination_port": 3389,
+      "protocol": "tcp",
+      "rule_name": "rdp_failed_login",
+      "severity": "high",
+      "message": "Repeated failed RDP login attempt."
+    },
+    {
+      "alert_id": "ids-007",
+      "timestamp": "2026-06-21T09:13:00Z",
+      "source_ip": "203.0.113.50",
+      "destination_ip": "172.16.20.10",
+      "destination_port": 502,
+      "protocol": "tcp",
+      "rule_name": "external_modbus_probe",
+      "severity": "high",
+      "message": "Known suspicious source probed PLC Modbus service."
+    }
+  ]
+}

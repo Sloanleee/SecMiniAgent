@@ -1,0 +1,5 @@
+# Local threat intelligence sample
+203.0.113.50
+evil-control.example
+https://evil-control.example/payload
+d41d8cd98f00b204e9800998ecf8427e

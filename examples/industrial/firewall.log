@@ -1,0 +1,5 @@
+2026-06-21T09:00:00Z fw01 src=10.10.5.23 dst=172.16.20.10 dpt=502 proto=tcp action=allow
+2026-06-21T09:01:10Z fw01 src=10.10.5.23 dst=172.16.20.20 dpt=4840 proto=tcp action=allow
+2026-06-21T09:02:30Z fw01 src=10.10.5.23 dst=172.16.30.15 dpt=102 proto=tcp action=allow
+2026-06-21T09:10:00Z fw01 src=203.0.113.50 dst=172.16.10.5 dpt=3389 proto=tcp action=deny
+2026-06-21T09:13:00Z fw01 src=203.0.113.50 dst=172.16.20.10 dpt=502 proto=tcp action=deny

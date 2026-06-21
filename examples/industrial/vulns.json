@@ -1,0 +1,16 @@
+{
+  "vulnerabilities": [
+    {
+      "asset_id": "asset-plc-1",
+      "cve": "CVE-2024-0001",
+      "severity": "high",
+      "description": "Sample high-risk PLC firmware vulnerability used for local demo data."
+    },
+    {
+      "asset_id": "asset-hmi-1",
+      "cve": "CVE-2023-0002",
+      "severity": "low",
+      "description": "Sample low-risk HMI issue."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+.pytest_cache/
+.secminiagent/sessions/
+.secminiagent/reports/
+*.py[cod]
+plan.md
+README-v1.md

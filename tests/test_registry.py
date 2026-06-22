@@ -18,6 +18,17 @@ class RegistryTest(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(result.success)
             self.assertIn("hello", result.output)
 
+    async def test_cli_registry_includes_rag_tools(self):
+        from secminiagent.cli import build_registry
+
+        registry = build_registry()
+        names = set(registry.names())
+
+        self.assertIn("ingest_knowledge", names)
+        self.assertIn("search_knowledge", names)
+        self.assertIn("explain_alert_with_rag", names)
+        self.assertIn("generate_rag_threat_report", names)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -113,6 +113,16 @@ def _tool_call_for_prompt(prompt: str) -> ToolCall | None:
             "match_iocs",
             {"alerts_path": "examples/industrial/ids_alerts.json", "ioc_path": "examples/industrial/ioc.txt"},
         )
+    if any(word in prompt for word in ["rag", "knowledge", "知识库", "风电", "鐭ヨ瘑搴?", "椋庣數", "wind"]):
+        return ToolCall(
+            "fake_call_1",
+            "generate_rag_threat_report",
+            {
+                "alerts_path": "examples/wind_power/alerts.csv",
+                "knowledge_path": "knowledge",
+                "top_k": 8,
+            },
+        )
     if any(word in prompt for word in ["industrial", "ot", "ics", "plc", "scada", "firewall", "threat", "工控", "工业"]):
         return ToolCall("fake_call_1", "generate_threat_report", industrial_args)
     if any(word in prompt for word in ["secret", "credential", "api key", "token", "password"]):

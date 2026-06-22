@@ -5,6 +5,7 @@ __pycache__/
 .pytest_cache/
 .secminiagent/sessions/
 .secminiagent/reports/
+.secminiagent/rag/
 *.py[cod]
 *.pyc
 .pytest_cache/

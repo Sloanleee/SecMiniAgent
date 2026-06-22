@@ -21,6 +21,12 @@ from .storage.transcript import TranscriptStore
 from .tools.file_tools import ListDirTool, ReadFileTool, WriteFileTool
 from .tools.git_tools import GitDiffTool, GitLogTool, GitStatusTool
 from .tools.patch_tool import ApplyPatchTool
+from .tools.rag_tools import (
+    ExplainAlertWithRagTool,
+    GenerateRagThreatReportTool,
+    IngestKnowledgeTool,
+    SearchKnowledgeTool,
+)
 from .tools.registry import ToolRegistry
 from .tools.search_tool import SearchCodeTool
 from .tools.security_tools import GenerateSecurityReportTool, ScanDependencyFilesTool, ScanInsecurePatternsTool, ScanSecretsTool
@@ -85,6 +91,10 @@ def build_registry() -> ToolRegistry:
     registry.register(DetectLateralMovementTool())
     registry.register(DetectSuspiciousOtAccessTool())
     registry.register(GenerateThreatReportTool())
+    registry.register(IngestKnowledgeTool())
+    registry.register(SearchKnowledgeTool())
+    registry.register(ExplainAlertWithRagTool())
+    registry.register(GenerateRagThreatReportTool())
     registry.register(RunShellTool())
     registry.register(ApplyPatchTool())
     registry.register(WriteFileTool())

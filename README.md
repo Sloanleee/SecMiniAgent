@@ -216,6 +216,23 @@ Supported code scan examples include:
 - `detect_suspicious_ot_access`: detect office-to-OT, cross-zone, IOC, and industrial protocol access
 - `generate_threat_report`: generate a Markdown industrial threat analysis report
 
+### RAG-Enhanced Threat Analysis
+
+SecMiniAgent includes a local RAG demo for industrial security alert analysis. It can ingest local Markdown knowledge under `knowledge/`, parse CSV alert exports, retrieve relevant protocol/playbook/wind-power context, and generate a RAG-enhanced Markdown threat report.
+
+Example:
+
+```bash
+python -m secminiagent "generate a RAG wind power threat report"
+```
+
+RAG tools:
+
+- `ingest_knowledge`
+- `search_knowledge`
+- `explain_alert_with_rag`
+- `generate_rag_threat_report`
+
 OT/ICS correlation rules currently cover:
 
 - access to industrial protocol ports on critical OT assets

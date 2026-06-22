@@ -25,6 +25,9 @@ def write_knowledge(root: Path) -> None:
 
 
 class RagToolsTest(unittest.IsolatedAsyncioTestCase):
+    def test_generate_rag_threat_report_tool_is_not_read_only(self):
+        self.assertFalse(GenerateRagThreatReportTool.read_only)
+
     async def test_ingest_and_search_knowledge(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

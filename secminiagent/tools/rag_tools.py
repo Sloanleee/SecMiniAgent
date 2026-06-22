@@ -142,7 +142,7 @@ class ExplainAlertWithRagTool(BaseTool):
 class GenerateRagThreatReportTool(BaseTool):
     name = "generate_rag_threat_report"
     description = "Generate a RAG-enhanced Markdown threat report from CSV security alerts."
-    read_only = True
+    read_only = False
     input_schema = {
         "type": "object",
         "required": ["alerts_path"],

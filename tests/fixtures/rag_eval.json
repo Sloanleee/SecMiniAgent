@@ -1,0 +1,10 @@
+[
+  {
+    "query": "high severity tcp traffic to port 502 in OT network",
+    "expected_doc_ids": ["protocols/modbus", "playbooks/suspicious_ot_access"]
+  },
+  {
+    "query": "remote maintenance access to wind farm SCADA",
+    "expected_doc_ids": ["wind_power/remote_maintenance_risks", "wind_power/wind_farm_security_context"]
+  }
+]

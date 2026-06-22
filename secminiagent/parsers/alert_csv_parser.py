@@ -7,14 +7,14 @@ from secminiagent.threat.alerts import SecurityAlert
 
 
 ALIASES = {
-    "timestamp": ("鏃堕棿", "timestamp", "time", "鍛婅鏃堕棿"),
-    "source_ip": ("婧怚P", "婧恑p", "source_ip", "src_ip", "src"),
-    "destination_ip": ("鐩殑IP", "鐩殑ip", "destination_ip", "dest_ip", "dst"),
-    "destination_port": ("鐩殑绔彛", "destination_port", "dest_port", "dpt", "port"),
-    "protocol": ("鍗忚", "protocol", "proto"),
-    "action": ("鍔ㄤ綔", "action"),
-    "severity": ("绾у埆", "severity", "level"),
-    "description": ("鎻忚堪", "description", "message"),
+    "timestamp": ("\u65f6\u95f4", "timestamp", "time", "event_time"),
+    "source_ip": ("\u6e90IP", "\u6e90ip", "source_ip", "src_ip", "src"),
+    "destination_ip": ("\u76ee\u7684IP", "\u76ee\u7684ip", "destination_ip", "dest_ip", "dst"),
+    "destination_port": ("\u76ee\u7684\u7aef\u53e3", "destination_port", "dest_port", "dpt", "port"),
+    "protocol": ("\u534f\u8bae", "protocol", "proto"),
+    "action": ("\u52a8\u4f5c", "action"),
+    "severity": ("\u7ea7\u522b", "severity", "level"),
+    "description": ("\u63cf\u8ff0", "description", "message"),
 }
 
 

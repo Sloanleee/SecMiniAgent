@@ -11,7 +11,7 @@ class AlertCsvParserTest(unittest.TestCase):
             root = Path(tmp)
             path = root / "alerts.csv"
             path.write_text(
-                "鏃堕棿,婧怚P,鐩殑IP,鐩殑绔彛,鍗忚,鍔ㄤ綔,绾у埆,鎻忚堪\n"
+                "\u65f6\u95f4,\u6e90IP,\u76ee\u7684IP,\u76ee\u7684\u7aef\u53e3,\u534f\u8bae,\u52a8\u4f5c,\u7ea7\u522b,\u63cf\u8ff0\n"
                 "2026-06-22T10:00:00Z,10.10.5.23,172.16.20.10,502,tcp,allow,high,Office host accessed PLC Modbus service.\n",
                 encoding="utf-8",
             )

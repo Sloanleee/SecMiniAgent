@@ -1,111 +1,433 @@
 # SecMiniAgent
 
-SecMiniAgent is a local security operations Agent CLI for defensive code review and industrial internet threat analysis.
+> 面向工业互联网安全运维的本地威胁分析 Agent：输入代码仓库、工业资产、告警日志、IOC、漏洞信息或风电场景 CSV 告警 → Agent 自动规划工具调用 → 执行安全扫描、OT 规则分析、RAG 知识检索 → 输出带证据的 Markdown 安全报告。
 
-Current version: `0.3.0`
+![Python](https://img.shields.io/badge/Python-3.11%2B-blue)
+![Agent](https://img.shields.io/badge/Agent-Function%20Calling-green)
+![RAG](https://img.shields.io/badge/RAG-Local%20Knowledge-orange)
+![Security](https://img.shields.io/badge/Security-OT%2FICS-red)
 
-## Overview
+---
 
-SecMiniAgent is a Python-based local Agent prototype. It keeps the basic Agent abilities of planning, tool calling, local file access, code search, Git inspection, shell execution with safety checks, session storage, and skill loading. On top of that, it adds a security-oriented workflow for industrial internet and OT/ICS operations:
+## 项目简介
 
-- parse industrial asset inventories
-- parse IDS alerts and firewall logs
-- parse local IOC and vulnerability files
-- correlate assets, alerts, IOCs, and vulnerabilities
-- detect suspicious OT access, lateral movement signals, and brute-force attempts
-- score industrial asset risk
-- generate Markdown security and threat analysis reports
+SecMiniAgent 是一个基于 Python 实现的本地安全分析 Agent CLI 原型。项目保留通用 Coding Agent 的基础能力，包括 Agent Loop、Function Calling、工具注册、文件读写、代码搜索、Git 检查、Shell 安全执行、会话状态保存和 Skills 加载；在此基础上，进一步面向工业互联网安全运维场景增加了资产解析、告警分析、IOC 匹配、OT 风险规则、RAG 知识检索和威胁报告生成能力。
 
-The project is local-first and defensive. It is suitable as a Mini Agent prototype, a security engineering learning project, or a resume project for "local threat analysis Agent" scenarios.
+项目重点不是做一个泛用聊天助手，而是验证一个更具体的安全工程问题：
 
-## Quick Start
+```text
+本地 Agent 能否在不依赖云端安全平台的情况下，
+结合工具调用、规则分析和本地 RAG 知识库，
+完成工业互联网安全告警的初步研判和报告生成？
+```
 
-Run commands from the project root:
+当前项目已经支持：
 
-```bash
+- 默认无真实 LLM 的 fake provider，可离线复现完整工具调用链路。
+- 接入 OpenAI-compatible、火山 Ark、讯飞 MaaS 等真实模型 provider。
+- 本地代码安全扫描、Secret 检测、依赖文件识别和 Markdown 安全报告。
+- 工业资产、IDS 告警、防火墙日志、IOC、漏洞信息解析与关联分析。
+- OT/ICS 场景下的可疑访问、横向移动、暴力破解、工业协议访问检测。
+- 本地 RAG 知识库检索，支持风电场景告警增强分析。
+- Skills 驱动的安全任务提示，如告警研判、IOC Hunting、工业资产风险审查等。
+
+---
+
+## 核心工作流
+
+```text
+用户输入安全分析任务
+         │
+         ▼
+python -m secminiagent "<task>"
+         │
+         ▼
+配置解析：provider / model / cwd / .env / session
+         │
+         ▼
+SkillLoader 根据任务加载安全分析 Skill
+         │
+         ▼
+AgentLoop 调用 LLM 或 fake provider
+         │
+         ├── 模型输出普通回答
+         └── 模型请求 Function Calling 工具
+                    │
+                    ▼
+          ToolRegistry 执行本地工具
+                    │
+                    ├── 代码安全扫描
+                    ├── 文件 / Git / Shell 工具
+                    ├── 工业威胁分析工具
+                    ├── RAG 知识检索工具
+                    └── 计划管理工具
+                    │
+                    ▼
+          工具结果回填给 AgentLoop
+                    │
+                    ▼
+          多轮执行直到生成最终报告
+```
+
+---
+
+## 系统架构
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                        CLI 入口层                            │
+│  __main__.py / cli.py                                       │
+│  参数解析 / .env 加载 / Provider 选择 / Skill 选择             │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────────┐
+│                       Agent 执行层                           │
+│  AgentLoop: model -> tool call -> observation -> final       │
+│  Planner: create_plan / update_plan                         │
+│  Events: streaming 输出 model/tool 状态                       │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────────┐
+│                       工具能力层                             │
+│  File / Search / Git / Shell / Patch                         │
+│  Security Scanner / Threat Tools / RAG Tools                 │
+│  ToolRegistry + JSON Schema                                  │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────────┐
+│                     工业安全分析层                           │
+│  Asset / Alert / IOC / Vulnerability parsers                 │
+│  OT Rules / Risk Scoring / Correlation / Reports             │
+│  Brute Force / Lateral Movement / Suspicious OT Access       │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────────┐
+│                       本地 RAG 层                            │
+│  Markdown Knowledge -> Chunk -> Local Embedding              │
+│  VectorStore / Retriever / Evaluation                        │
+│  RAG Threat Report with Knowledge Evidence                   │
+└───────────────────────────┬─────────────────────────────────┘
+                            │
+┌───────────────────────────▼─────────────────────────────────┐
+│                       模型适配层                             │
+│  fake / OpenAI-compatible / Volcengine Ark / XFYun MaaS      │
+│  统一 LLMClient 协议，屏蔽供应商差异                          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 技术亮点
+
+### 1. ReAct 风格 Agent Loop
+
+SecMiniAgent 使用简化 ReAct 执行流程：
+
+```text
+User Task -> Model Thought / Tool Call -> Tool Result -> Model Continue -> Final Report
+```
+
+模型不直接访问本地文件和命令，而是通过工具层执行受控操作。这样可以把 LLM 推理能力和本地安全工具能力解耦。
+
+核心文件：
+
+```text
+secminiagent/agent/loop.py
+secminiagent/tools/registry.py
+secminiagent/tools/base.py
+```
+
+### 2. Function Calling 工具框架
+
+每个工具都包含：
+
+```text
+name
+description
+input_schema
+read_only
+execute()
+```
+
+工具通过 JSON Schema 暴露给模型，模型选择工具和参数，Agent 执行后将结果回填给模型。
+
+当前主要工具类型：
+
+```text
+文件工具      list_dir / read_file / write_file
+代码搜索      search_code
+Git 工具      git_status / git_diff / git_log
+Shell 工具    run_shell
+Patch 工具    apply_patch
+安全扫描      scan_secrets / scan_insecure_patterns / generate_security_report
+工业分析      parse_assets / parse_alerts / correlate_alerts / generate_threat_report
+RAG 工具      ingest_knowledge / search_knowledge / generate_rag_threat_report
+```
+
+### 3. 工业互联网威胁分析
+
+项目内置了工业安全运维常见数据对象：
+
+```text
+资产清单        assets.csv
+IDS 告警        ids_alerts.json
+防火墙日志      firewall.log
+IOC 情报        ioc.txt
+漏洞上下文      vulns.json
+```
+
+支持的分析能力包括：
+
+- 工业资产分区、关键性、协议暴露分析。
+- 告警源 IP、目的 IP、端口、协议、动作、级别解析。
+- IOC 与告警流量匹配。
+- PLC、HMI、SCADA、工程站、跳板机等关键资产风险评分。
+- 可疑 OT 访问、横向移动、暴力破解行为检测。
+- 资产、告警、IOC、漏洞信息综合关联。
+
+### 4. 本地 RAG 威胁分析
+
+SecMiniAgent 增加了本地 RAG 能力，用于把“告警数据”和“安全知识”结合起来。
+
+RAG 数据流：
+
+```text
+knowledge/*.md
+     │
+     ▼
+Markdown 文档加载与 Chunk
+     │
+     ▼
+本地 deterministic embedding / lexical retrieval
+     │
+     ▼
+根据告警字段构造 Query
+     │
+     ▼
+检索 Modbus / OPC UA / 风电场景 / 响应剧本等知识
+     │
+     ▼
+生成带 Knowledge Evidence 的威胁报告
+```
+
+当前知识库包括：
+
+```text
+knowledge/protocols/modbus.md
+knowledge/protocols/opcua.md
+knowledge/protocols/s7comm.md
+knowledge/playbooks/brute_force_response.md
+knowledge/playbooks/lateral_movement_response.md
+knowledge/playbooks/suspicious_ot_access.md
+knowledge/rules/ot_rules.md
+knowledge/wind_power/wind_farm_security_context.md
+knowledge/wind_power/remote_maintenance_risks.md
+```
+
+RAG 工具：
+
+```text
+ingest_knowledge
+search_knowledge
+explain_alert_with_rag
+generate_rag_threat_report
+```
+
+### 5. 真实模型 Provider 适配
+
+当前支持：
+
+| Provider | 说明 |
+| --- | --- |
+| `fake` | 离线测试 provider，不调用远程 API |
+| `openai` | OpenAI-compatible Chat Completions API |
+| `volcengine` | 火山 Ark API |
+| `xfyun` | 讯飞 MaaS API |
+
+业务层只依赖统一的 LLMClient 协议。新增模型供应商时，只需要增加 provider client，并在 CLI 中注册。
+
+### 6. 安全边界与权限控制
+
+SecMiniAgent 是防御性、本地优先项目：
+
+- 文件访问限制在当前 workspace 内。
+- 高风险 Shell 命令会被阻断或要求确认。
+- `rm`、`sudo`、`pip install`、`git reset --hard` 等高风险操作不会静默执行。
+- `.env`、运行会话、生成报告默认不进入 Git。
+- 项目用于安全审查、告警研判和防御分析，不用于攻击自动化。
+
+---
+
+## RAG 能力说明
+
+### RAG 与普通工业分析的区别
+
+普通工业分析主要依赖结构化规则：
+
+```text
+资产 + 告警 + IOC + 漏洞 -> 规则关联 -> 威胁报告
+```
+
+RAG 分析会额外检索本地知识库：
+
+```text
+告警 CSV -> 构造检索 Query -> 检索工业安全知识 -> 生成带证据报告
+```
+
+因此 RAG 报告中会出现：
+
+```text
+Knowledge Evidence
+Source: knowledge/protocols/modbus.md
+Source: knowledge/wind_power/wind_farm_security_context.md
+```
+
+### RAG Demo
+
+默认风电场景告警文件：
+
+```text
+examples/wind_power/alerts.csv
+```
+
+默认知识库目录：
+
+```text
+knowledge/
+```
+
+运行：
+
+```powershell
+python -m secminiagent --no-env "generate a RAG wind power threat report"
+```
+
+如果使用真实模型，例如火山 Ark：
+
+```powershell
+python -m secminiagent "generate a RAG wind power threat report"
+```
+
+为了提高真实模型工具调用稳定性，`generate_rag_threat_report` 已在 schema 中声明默认路径：
+
+```text
+alerts_path = examples/wind_power/alerts.csv
+knowledge_path = knowledge
+top_k = 8
+```
+
+即使真实模型误传：
+
+```json
+{"alerts_path": "alerts.csv"}
+```
+
+当根目录不存在 `alerts.csv` 时，工具层也会自动 fallback 到：
+
+```text
+examples/wind_power/alerts.csv
+```
+
+---
+
+## 快速开始
+
+### 环境要求
+
+- Python 3.11+
+- Windows PowerShell / macOS / Linux shell
+- 可选：OpenAI、火山 Ark 或讯飞 MaaS API Key
+
+### 1. 进入项目
+
+```powershell
+cd C:\D\code\ClaudeCode\SecMiniAgent
+```
+
+或从 GitHub 克隆后进入项目目录：
+
+```powershell
+git clone https://github.com/Sloanleee/SecMiniAgent.git
 cd SecMiniAgent
 ```
 
-Show help:
+### 2. 创建虚拟环境
 
-```bash
+Windows PowerShell：
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+如果 PowerShell 执行策略拦截：
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
+```
+
+### 3. 安装项目
+
+项目当前运行时不依赖第三方包，可以直接运行：
+
+```powershell
 python -m secminiagent --help
 ```
 
-Run the built-in fake provider. This mode does not call any remote API:
+也可以使用 editable install：
 
-```bash
-python -m secminiagent "scan this project for hardcoded secrets"
+```powershell
+python -m pip install -e .
 ```
 
-Generate a code security report:
+安装后可使用命令：
 
-```bash
-python -m secminiagent "generate a security report"
-```
-
-Generate an industrial threat analysis report from the bundled demo data:
-
-```bash
-python -m secminiagent "generate an industrial threat report"
-```
-
-Try several industrial security workflows:
-
-```bash
-python -m secminiagent "parse industrial assets"
-python -m secminiagent "triage industrial alerts"
-python -m secminiagent "hunt IOC matches in alerts"
-python -m secminiagent "detect suspicious OT access"
-python -m secminiagent "detect lateral movement in industrial alerts"
-python -m secminiagent "detect brute force attempts"
-```
-
-List available skills:
-
-```bash
-python -m secminiagent --list-skills
-```
-
-Show resolved runtime configuration:
-
-```bash
-python -m secminiagent --show-config
-```
-
-## Installation
-
-SecMiniAgent currently uses Python standard-library modules for runtime behavior.
-
-Requirements:
-
-- Python `>=3.11`
-- No mandatory third-party Python packages
-- Optional API keys for real LLM providers
-
-Optional editable install:
-
-```bash
-pip install -e .
-```
-
-After editable install, the console command can also be used:
-
-```bash
+```powershell
 secminiagent "generate an industrial threat report"
 ```
 
-## Configuration
+### 4. 运行测试
 
-The default provider is `fake`, so the project can run without API keys.
+```powershell
+python -m unittest discover -s tests -p "test_*.py" -v
+```
 
-To use a real model provider, copy `.env.example` to `.env`:
+当前测试覆盖 Agent Loop、配置、权限策略、安全扫描、工业威胁工具、RAG chunk、RAG retrieval、RAG evaluator 和 RAG tools。
 
-```bash
+### 5. 运行 Demo
+
+普通代码安全报告：
+
+```powershell
+python -m secminiagent --no-env "generate a security report"
+```
+
+工业威胁分析报告：
+
+```powershell
+python -m secminiagent --no-env "generate an industrial threat report"
+```
+
+RAG 风电威胁分析报告：
+
+```powershell
+python -m secminiagent --no-env "generate a RAG wind power threat report"
+```
+
+---
+
+## 配置真实模型
+
+默认 provider 是 `fake`，不需要 API Key。
+
+如果要使用真实模型，复制配置文件：
+
+```powershell
 copy .env.example .env
 ```
 
-OpenAI-compatible provider:
+### OpenAI-compatible
 
 ```env
 SECMINI_PROVIDER=openai
@@ -114,165 +436,88 @@ OPENAI_MODEL=gpt-4.1-mini
 OPENAI_BASE_URL=https://api.openai.com/v1
 ```
 
-Volcengine Ark provider:
+### 火山 Ark
 
 ```env
 SECMINI_PROVIDER=volcengine
 ARK_API_KEY=your-volcengine-ark-key
-ARK_MODEL=doubao-seed-1-6-251015
+ARK_MODEL=your-endpoint-id
 ARK_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
 ```
 
-XFYun MaaS provider:
+### 讯飞 MaaS
 
 ```env
 SECMINI_PROVIDER=xfyun
 XFYUN_API_KEY=your-xfyun-maas-key
-XFYUN_MODEL=your-xfyun-model-id
+XFYUN_MODEL=your-model-id
 XFYUN_BASE_URL=http://maas-api.cn-huabei-1.xf-yun.com/v1
 XFYUN_LORA_ID=0
 ```
 
-CLI arguments override `.env` values:
+CLI 参数可以覆盖 `.env`：
 
-```bash
-python -m secminiagent --provider xfyun --model your-model-id "generate an industrial threat report"
+```powershell
+python -m secminiagent --provider volcengine --model your-endpoint-id "generate a RAG wind power threat report"
 ```
 
-Useful runtime flags:
+查看当前配置：
 
-```bash
-python -m secminiagent --cwd C:\path\to\workspace "scan this project"
-python -m secminiagent --max-turns 12 "analyze alerts"
-python -m secminiagent --no-stream "generate a security report"
-python -m secminiagent --yes "run safe local checks"
+```powershell
+python -m secminiagent --show-config
 ```
 
-## Features
+忽略 `.env`，强制使用 fake provider：
 
-### Agent Framework
+```powershell
+python -m secminiagent --no-env "generate a RAG wind power threat report"
+```
 
-- AsyncIO-based CLI entry point
-- ReAct-style Agent loop
-- Function Calling style tool registration
-- JSON Schema tool definitions
-- tool call execution and tool-result feedback
-- streaming model output and progress events
-- session transcripts under `.secminiagent/sessions/`
-- context compaction for long conversations and large tool outputs
-- built-in and workspace-local skills
+---
 
-### LLM Providers
+## 常用命令
 
-- `fake`: offline provider for local development and tests
-- `openai`: OpenAI-compatible HTTP Chat Completions API
-- `volcengine`: Volcengine Ark compatible provider
-- `xfyun`: XFYun MaaS compatible provider
+### Agent 基础能力
 
-### Local Engineering Tools
+```powershell
+python -m secminiagent --help
+python -m secminiagent --list-skills
+python -m secminiagent --show-config
+python -m secminiagent "explain current project structure"
+```
 
-- `list_dir`: list workspace files
-- `read_file`: read local text files with line numbers
-- `write_file`: create or overwrite workspace files
-- `search_code`: search local code
-- `git_status`: inspect Git status
-- `git_diff`: inspect Git diff
-- `git_log`: inspect Git history
-- `run_shell`: run shell commands with safety policy
-- `apply_patch`: apply patch-style file edits
-- `create_plan` / `update_plan`: maintain task plans
+### 代码安全分析
 
-### Code Security Tools
+```powershell
+python -m secminiagent "scan this project for hardcoded secrets"
+python -m secminiagent "scan insecure code patterns"
+python -m secminiagent "generate a security report"
+python -m secminiagent "review current git diff for security risks"
+```
 
-- `scan_secrets`: detect hardcoded secrets and credential-like assignments
-- `scan_insecure_patterns`: detect risky code patterns
-- `scan_dependency_files`: locate dependency manifests for audit review
-- `generate_security_report`: generate a Markdown code security report
+### 工业互联网威胁分析
 
-Supported code scan examples include:
+```powershell
+python -m secminiagent "parse industrial assets"
+python -m secminiagent "triage industrial alerts"
+python -m secminiagent "hunt IOC matches in alerts"
+python -m secminiagent "detect suspicious OT access"
+python -m secminiagent "detect lateral movement in industrial alerts"
+python -m secminiagent "detect brute force attempts"
+python -m secminiagent "generate an industrial threat report"
+```
 
-- private keys
-- OpenAI-style keys
-- AWS access key IDs
-- suspicious `api_key`, `secret`, `token`, or `password` assignments
-- Python `eval` / `exec`
-- `subprocess(..., shell=True)`
-- unsafe `pickle.load` / `pickle.loads`
-- weak `md5` / `sha1`
-- plaintext HTTP URLs
-- possible SQL string concatenation
-- path traversal hints
+### RAG 威胁分析
 
-### Industrial Threat Analysis Tools
-
-- `parse_assets`: parse industrial asset inventory CSV files
-- `parse_alerts`: parse IDS alert JSON files or firewall logs
-- `extract_iocs`: parse local IOC text files
-- `match_iocs`: match IOC values against alert source and destination IPs
-- `analyze_asset_risk`: score assets by criticality, zone, alert severity, and OT exposure
-- `correlate_alerts`: correlate assets, alerts, IOCs, and vulnerabilities into suspected incidents
-- `detect_bruteforce`: detect repeated login-like alerts
-- `detect_lateral_movement`: detect one source reaching many destination assets
-- `detect_suspicious_ot_access`: detect office-to-OT, cross-zone, IOC, and industrial protocol access
-- `generate_threat_report`: generate a Markdown industrial threat analysis report
-
-### RAG-Enhanced Threat Analysis
-
-SecMiniAgent includes a local RAG demo for industrial security alert analysis. It can ingest local Markdown knowledge under `knowledge/`, parse CSV alert exports, retrieve relevant protocol/playbook/wind-power context, and generate a RAG-enhanced Markdown threat report.
-
-Example:
-
-```bash
+```powershell
 python -m secminiagent "generate a RAG wind power threat report"
+python -m secminiagent "search knowledge for Modbus PLC TCP 502"
+python -m secminiagent "explain alert with RAG: source 10.10.5.23 accessed 172.16.20.10 port 502"
 ```
 
-RAG tools:
+---
 
-- `ingest_knowledge`
-- `search_knowledge`
-- `explain_alert_with_rag`
-- `generate_rag_threat_report`
-
-OT/ICS correlation rules currently cover:
-
-- access to industrial protocol ports on critical OT assets
-- office or IT source accessing critical OT assets
-- cross-zone access to OT assets
-- IOC matches in alert traffic
-- one source probing multiple OT assets
-- high-risk vulnerable asset with recent alerts
-
-## Demo Data
-
-The `examples/industrial/` directory contains local demo data:
-
-```text
-examples/industrial/
-  assets.csv        Industrial asset inventory
-  ids_alerts.json   IDS alerts
-  firewall.log      Firewall flow logs
-  ioc.txt           Local IOC values
-  vulns.json        Vulnerability context
-```
-
-The fake provider routes common prompts to this demo data, which makes the industrial threat analysis workflow runnable without a real LLM API.
-
-## Application Scenarios
-
-SecMiniAgent is designed for local defensive security workflows such as:
-
-- local code security review before committing or publishing a project
-- hardcoded secret and insecure pattern scanning
-- Git diff security review
-- industrial asset inventory review
-- IDS and firewall alert triage
-- IOC hunting against local alert files
-- OT/ICS suspicious access detection
-- asset risk ranking for PLC, HMI, engineering stations, jump hosts, and production-zone assets
-- incident response summary generation
-- Markdown report generation for security review or learning demonstrations
-
-## Project Architecture
+## 项目目录
 
 ```text
 SecMiniAgent/
@@ -281,162 +526,193 @@ SecMiniAgent/
   .env.example
   examples/
     industrial/
+      assets.csv
+      ids_alerts.json
+      firewall.log
+      ioc.txt
+      vulns.json
+    wind_power/
+      alerts.csv
+  knowledge/
+    protocols/
+    playbooks/
+    rules/
+    wind_power/
   secminiagent/
     __main__.py
     cli.py
     config.py
     agent/
-      loop.py
-      planner.py
-      events.py
     context/
-      compressor.py
-      manager.py
     llm/
-      base.py
-      fake.py
-      openai_client.py
-      volcengine_client.py
-      xfyun_client.py
-    tools/
-      base.py
-      registry.py
-      file_tools.py
-      search_tool.py
-      git_tools.py
-      shell_tool.py
-      patch_tool.py
-      security_tools.py
-      threat_tools.py
-    security/
-      scanner.py
-      rules.py
-      ot_rules.py
-      report.py
-      threat_report.py
-    threat/
-      assets.py
-      alerts.py
-      indicators.py
-      incidents.py
-      risk_score.py
-      analyzer.py
-      attack_chain.py
     parsers/
-      asset_csv_parser.py
-      alert_json_parser.py
-      firewall_parser.py
-      ioc_parser.py
-      vuln_parser.py
+    rag/
     safety/
-      command_policy.py
-      permissions.py
+    security/
     skills/
-      loader.py
-      builtin/
     storage/
-      transcript.py
+    threat/
+    tools/
   tests/
 ```
 
-Core module responsibilities:
+核心模块说明：
 
-- `secminiagent/cli.py`: command-line argument parsing, provider selection, tool registry setup
-- `secminiagent/agent/loop.py`: Agent loop, model calls, tool calls, tool result feedback
-- `secminiagent/llm/`: model provider adapters
-- `secminiagent/tools/`: Function Calling tools
-- `secminiagent/security/`: code security scanner, OT rules, and report renderers
-- `secminiagent/threat/`: industrial threat domain models and correlation logic
-- `secminiagent/parsers/`: local parsers for assets, alerts, IOCs, firewall logs, and vulnerabilities
-- `secminiagent/safety/`: shell command risk policy and approval handling
-- `secminiagent/skills/`: built-in task guidance for security workflows
-- `secminiagent/storage/`: JSONL session transcripts
+| 模块 | 作用 |
+| --- | --- |
+| `secminiagent/cli.py` | 命令行入口、参数解析、provider 选择、工具注册 |
+| `secminiagent/agent/loop.py` | Agent 主循环、模型调用、工具调用、结果回填 |
+| `secminiagent/llm/` | fake、OpenAI、火山 Ark、讯飞 MaaS provider |
+| `secminiagent/tools/` | Function Calling 工具实现 |
+| `secminiagent/security/` | 安全扫描规则、OT 规则、报告渲染 |
+| `secminiagent/threat/` | 工业安全数据模型、风险评分、事件关联 |
+| `secminiagent/parsers/` | 资产、告警、日志、IOC、漏洞解析器 |
+| `secminiagent/rag/` | 本地 RAG 文档、chunk、检索、评估 |
+| `secminiagent/skills/` | 安全任务 Skill 文档 |
+| `secminiagent/storage/` | JSONL 会话记录 |
 
-## Built-in Skills
+---
 
-The current built-in skills are:
+## 测试说明
 
-- `code_security_review`
-- `secret_scan`
-- `dependency_audit`
-- `industrial_threat_analysis`
-- `alert_triage`
-- `ioc_hunting`
-- `ot_asset_risk_review`
-- `incident_response`
+运行全量测试：
 
-Skills are Markdown files under `secminiagent/skills/builtin/`. They are selected automatically by prompt keywords or can be loaded explicitly:
-
-```bash
-python -m secminiagent --skill industrial_threat_analysis "generate an industrial threat report"
-```
-
-## Output Files
-
-Runtime output is stored under `.secminiagent/`:
-
-```text
-.secminiagent/
-  sessions/   JSONL conversation transcripts
-  reports/    Optional generated Markdown reports
-```
-
-These paths are ignored by Git.
-
-## Safety Boundary
-
-SecMiniAgent is defensive and local-first:
-
-- file access is constrained to the selected workspace
-- high-risk shell commands are denied or require approval
-- broad destructive operations such as `git reset --hard` and recursive delete are blocked
-- `.env`, sessions, and generated reports are ignored by Git
-- the project is intended for security review, triage, and defensive analysis, not exploit automation
-
-## Tests
-
-Run the full test suite:
-
-```bash
+```powershell
 python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
-Current tests cover:
+只运行 RAG 相关测试：
 
-- config and `.env` loading
-- Agent loop tool execution
-- tool registry behavior
-- shell safety policy
-- patch application
-- secret and insecure pattern scanning
-- security report generation
-- industrial parsers
-- OT rules
-- industrial threat tools
+```powershell
+python -m unittest tests.test_rag_chunker tests.test_rag_retriever tests.test_rag_evaluator tests.test_rag_tools -v
+```
 
-## Difference From MiniClaude
+只运行 RAG 指标测试：
 
-MiniClaude focuses on local coding tasks: reading files, editing code, running shell commands, planning, and interacting with Git.
+```powershell
+python -m unittest tests.test_rag_evaluator -v
+```
 
-SecMiniAgent keeps those local Agent foundations but changes the project goal and adds domain-specific security operations capabilities:
+当前 RAG 指标包括：
 
-- industrial asset and alert data models
-- asset, alert, IOC, firewall, and vulnerability parsers
-- OT/ICS correlation rules
-- industrial asset risk scoring
-- suspicious OT access and lateral movement detection
-- defensive security report and industrial threat report generation
-- security-specific built-in skills
+| 指标 | 说明 |
+| --- | --- |
+| `recall_at_k` | Top-K 检索结果中召回了多少应命中文档 |
+| `mrr` | 正确文档排名越靠前，分数越高 |
+| `hit_rate` | Top-K 内是否至少命中一个正确文档 |
 
-In short, MiniClaude is a coding Agent prototype. SecMiniAgent is a local defensive security and industrial threat analysis Agent prototype.
+测试重点：
+
+- 中文 / 英文 CSV 告警表头解析。
+- Markdown 知识库加载与 chunk。
+- 本地知识检索与 metadata filter。
+- RAG 指标计算。
+- RAG 工具默认路径和 fallback。
+- Agent 工具注册。
+- 工业威胁分析工具链。
+
+---
+
+## 内置 Skills
+
+当前内置 Skill：
+
+```text
+alert_triage
+code_security_review
+dependency_audit
+incident_response
+industrial_threat_analysis
+ioc_hunting
+ot_asset_risk_review
+secret_scan
+```
+
+查看 Skill：
+
+```powershell
+python -m secminiagent --list-skills
+```
+
+强制加载某个 Skill：
+
+```powershell
+python -m secminiagent --skill industrial_threat_analysis "generate an industrial threat report"
+```
+
+---
+
+## 输出文件
+
+运行时文件位于：
+
+```text
+.secminiagent/
+  sessions/   会话 JSONL 记录
+  reports/    可选生成的 Markdown 报告
+  rag/        可选 RAG 运行缓存
+```
+
+这些路径建议加入 `.gitignore`，避免提交本地会话、报告和缓存。
+
+---
+
+## 与 MiniClaude 的区别
+
+MiniClaude 更偏向通用本地 Coding Agent：
+
+```text
+文件读写 / Shell / Git / Patch / Planning / Tool Call
+```
+
+SecMiniAgent 在这些基础能力之上，增加了明确的安全运维和工业互联网场景：
+
+```text
+资产清单解析
+IDS / 防火墙告警解析
+IOC Hunting
+OT 规则检测
+工业资产风险评分
+风电场景 RAG 知识库
+威胁分析 Markdown 报告
+```
+
+一句话区分：
+
+```text
+MiniClaude 是通用 Coding Agent 原型。
+SecMiniAgent 是面向工业互联网安全运维的本地威胁分析 Agent 原型。
+```
+
+---
+
+## 应用场景
+
+- 本地代码安全审查。
+- 提交 GitHub 前扫描 Secret 和危险代码模式。
+- 工业资产清单风险审查。
+- IDS / 防火墙告警初步研判。
+- IOC 与告警日志匹配。
+- PLC / HMI / SCADA / 工程站可疑访问检测。
+- 风电场站远程维护风险分析。
+- 工业安全学习、演示和简历项目展示。
+
+---
 
 ## Roadmap
 
-Planned improvements:
+后续可继续增强：
 
-- support more real-world log formats such as Syslog, Suricata, Zeek, and Windows Event logs
-- add MITRE ATT&CK for ICS technique mapping
-- add richer incident severity and status workflow
-- improve report templates for daily reports, weekly reports, and incident response reports
-- support directory-level batch ingestion for industrial security data
-- add more tests for real provider request formatting and streaming tool calls
+- 支持 Syslog、Suricata、Zeek、Windows Event 等更多日志格式。
+- 增加 MITRE ATT&CK for ICS 技术映射。
+- 引入更完整的事件状态流转，如 open / investigating / contained / closed。
+- 增加 RAG 评估集和检索质量对比报告。
+- 接入可选向量库，如 Chroma、FAISS 或 SQLite FTS。
+- 增加报告模板：日报、周报、事件响应报告、资产风险报告。
+- 增强真实模型 provider 的 streaming tool call 测试。
+
+---
+
+## 免责声明
+
+SecMiniAgent 是本地防御性安全分析原型，适合学习、演示和安全运维辅助分析。项目不提供攻击自动化能力，不应被用于未授权测试、攻击或破坏性操作。

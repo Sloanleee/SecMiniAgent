@@ -4,6 +4,7 @@ from pathlib import Path
 
 from secminiagent.tools.base import ToolContext
 from secminiagent.tools.rag_tools import (
+    DEFAULT_RAG_ALERTS_PATH,
     ExplainAlertWithRagTool,
     GenerateRagThreatReportTool,
     IngestKnowledgeTool,
@@ -20,6 +21,16 @@ def write_knowledge(root: Path) -> None:
     )
     (root / "knowledge" / "playbooks" / "suspicious_ot_access.md").write_text(
         "# Suspicious OT Access Response\n\nVerify authorization and review segmentation.\n",
+        encoding="utf-8",
+    )
+
+
+def write_wind_power_alerts(root: Path) -> None:
+    path = root / DEFAULT_RAG_ALERTS_PATH
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "\u65f6\u95f4,\u6e90IP,\u76ee\u7684IP,\u76ee\u7684\u7aef\u53e3,\u534f\u8bae,\u52a8\u4f5c,\u7ea7\u522b,\u63cf\u8ff0\n"
+        "2026-06-22T10:00:00Z,10.10.5.23,172.16.20.10,502,tcp,allow,high,Office host accessed PLC Modbus service.\n",
         encoding="utf-8",
     )
 
@@ -69,13 +80,45 @@ class RagToolsTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn("Knowledge Evidence", result.output)
             self.assertIn("Modbus", result.output)
 
+    async def test_generate_rag_threat_report_defaults_to_wind_power_demo_alerts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_knowledge(root)
+            write_wind_power_alerts(root)
+            context = ToolContext(cwd=root, max_output_chars=12000)
+
+            result = await GenerateRagThreatReportTool().execute(
+                {"knowledge_path": "knowledge", "top_k": 3},
+                context,
+            )
+
+            self.assertTrue(result.success)
+            self.assertIn("# RAG-Enhanced Industrial Threat Report", result.output)
+            self.assertIn("10.10.5.23 -> 172.16.20.10:502", result.output)
+
+    async def test_generate_rag_threat_report_falls_back_from_root_alerts_csv_to_demo(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_knowledge(root)
+            write_wind_power_alerts(root)
+            context = ToolContext(cwd=root, max_output_chars=12000)
+
+            result = await GenerateRagThreatReportTool().execute(
+                {"alerts_path": "alerts.csv", "knowledge_path": "knowledge", "top_k": 3},
+                context,
+            )
+
+            self.assertTrue(result.success)
+            self.assertIn("# RAG-Enhanced Industrial Threat Report", result.output)
+            self.assertIn("10.10.5.23 -> 172.16.20.10:502", result.output)
+
     async def test_generate_rag_threat_report_from_csv(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             write_knowledge(root)
             (root / "examples").mkdir()
             (root / "examples" / "alerts.csv").write_text(
-                "鏃堕棿,婧怚P,鐩殑IP,鐩殑绔彛,鍗忚,鍔ㄤ綔,绾у埆,鎻忚堪\n"
+                "\u65f6\u95f4,\u6e90IP,\u76ee\u7684IP,\u76ee\u7684\u7aef\u53e3,\u534f\u8bae,\u52a8\u4f5c,\u7ea7\u522b,\u63cf\u8ff0\n"
                 "2026-06-22T10:00:00Z,10.10.5.23,172.16.20.10,502,tcp,allow,high,Office host accessed PLC Modbus service.\n",
                 encoding="utf-8",
             )

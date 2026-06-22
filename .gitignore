@@ -3,6 +3,7 @@
 !.env.example
 __pycache__/
 .pytest_cache/
+.secminiagent/
 .secminiagent/sessions/
 .secminiagent/reports/
 .secminiagent/rag/
@@ -14,5 +15,9 @@ venv/
 build/
 dist/
 *.egg-info/
+.superpowers/
+docs/
 plan.md
+tech.md
 README-v1.md
+problem_solution.md

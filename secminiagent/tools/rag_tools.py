@@ -18,6 +18,9 @@ OT_PORT_HINTS = {
     4840: "OPC UA industrial data exchange OT access",
 }
 
+DEFAULT_RAG_ALERTS_PATH = "examples/wind_power/alerts.csv"
+DEFAULT_RAG_KNOWLEDGE_PATH = "knowledge"
+
 
 def _json(data: Any) -> str:
     return json.dumps(data, ensure_ascii=False, indent=2)
@@ -141,24 +144,61 @@ class ExplainAlertWithRagTool(BaseTool):
 
 class GenerateRagThreatReportTool(BaseTool):
     name = "generate_rag_threat_report"
-    description = "Generate a RAG-enhanced Markdown threat report from CSV security alerts."
+    description = (
+        "Generate a RAG-enhanced Markdown threat report from CSV security alerts. "
+        "For the built-in wind power demo, use alerts_path='examples/wind_power/alerts.csv' "
+        "and knowledge_path='knowledge'. Do not guess alerts_path='alerts.csv' unless that file exists."
+    )
     read_only = False
     input_schema = {
         "type": "object",
-        "required": ["alerts_path"],
         "properties": {
-            "alerts_path": {"type": "string"},
-            "knowledge_path": {"type": "string", "default": "knowledge"},
-            "top_k": {"type": "integer", "default": 8, "minimum": 1, "maximum": 12},
-            "write_file": {"type": "boolean", "default": False},
-            "output_path": {"type": "string"},
+            "alerts_path": {
+                "type": "string",
+                "default": DEFAULT_RAG_ALERTS_PATH,
+                "description": (
+                    "Workspace-relative CSV alert file path. "
+                    "For the built-in wind power demo, use 'examples/wind_power/alerts.csv'. "
+                    "Do not use 'alerts.csv' unless a file with that name exists in the workspace root."
+                ),
+            },
+            "knowledge_path": {
+                "type": "string",
+                "default": DEFAULT_RAG_KNOWLEDGE_PATH,
+                "description": (
+                    "Workspace-relative Markdown knowledge directory. "
+                    "For the built-in demo, use 'knowledge'. It includes protocols, playbooks, "
+                    "OT rules, and wind power context."
+                ),
+            },
+            "top_k": {
+                "type": "integer",
+                "default": 8,
+                "minimum": 1,
+                "maximum": 12,
+                "description": "Number of knowledge chunks to retrieve per alert. Use 8 for the built-in demo.",
+            },
+            "write_file": {
+                "type": "boolean",
+                "default": False,
+                "description": "Whether to write the generated report to a local Markdown file.",
+            },
+            "output_path": {
+                "type": "string",
+                "description": "Optional workspace-relative output report path when write_file is true.",
+            },
         },
     }
 
     async def execute(self, arguments: dict[str, Any], context: ToolContext) -> ToolResult:
-        alerts_path = resolve_workspace_path(context.cwd, str(arguments["alerts_path"]))
+        alerts_path_arg = str(arguments.get("alerts_path") or DEFAULT_RAG_ALERTS_PATH)
+        alerts_path = resolve_workspace_path(context.cwd, alerts_path_arg)
+        if not alerts_path.exists() and alerts_path_arg == "alerts.csv":
+            fallback_path = resolve_workspace_path(context.cwd, DEFAULT_RAG_ALERTS_PATH)
+            if fallback_path.exists():
+                alerts_path = fallback_path
         alerts = parse_alerts_csv(alerts_path)
-        retriever = _retriever_for(context, str(arguments.get("knowledge_path") or "knowledge"))
+        retriever = _retriever_for(context, str(arguments.get("knowledge_path") or DEFAULT_RAG_KNOWLEDGE_PATH))
         evidence: list[dict[str, object]] = []
         top_k = int(arguments.get("top_k") or 8)
         for alert in alerts:

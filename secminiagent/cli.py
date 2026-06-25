@@ -21,6 +21,7 @@ from .storage.transcript import TranscriptStore
 from .tools.file_tools import ListDirTool, ReadFileTool, WriteFileTool
 from .tools.git_tools import GitDiffTool, GitLogTool, GitStatusTool
 from .tools.patch_tool import ApplyPatchTool
+from .tools.rag_eval_tools import EvaluateRagTool
 from .tools.rag_tools import (
     ExplainAlertWithRagTool,
     GenerateRagThreatReportTool,
@@ -95,6 +96,7 @@ def build_registry() -> ToolRegistry:
     registry.register(SearchKnowledgeTool())
     registry.register(ExplainAlertWithRagTool())
     registry.register(GenerateRagThreatReportTool())
+    registry.register(EvaluateRagTool())
     registry.register(RunShellTool())
     registry.register(ApplyPatchTool())
     registry.register(WriteFileTool())

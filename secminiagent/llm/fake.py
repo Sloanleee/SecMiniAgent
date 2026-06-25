@@ -113,6 +113,18 @@ def _tool_call_for_prompt(prompt: str) -> ToolCall | None:
             "match_iocs",
             {"alerts_path": "examples/industrial/ids_alerts.json", "ioc_path": "examples/industrial/ioc.txt"},
         )
+    if any(word in prompt for word in ["evaluate rag", "rag benchmark", "rag evaluation"]):
+        return ToolCall(
+            "fake_call_1",
+            "evaluate_rag",
+            {
+                "eval_path": "tests/fixtures/rag_eval.json",
+                "knowledge_path": "knowledge",
+                "backend": "local",
+                "top_k_values": [1, 3, 5, 8],
+                "query_strategies": ["description_only", "description_port", "description_port_hint"],
+            },
+        )
     if any(word in prompt for word in ["rag", "knowledge", "知识库", "风电", "鐭ヨ瘑搴?", "椋庣數", "wind"]):
         return ToolCall(
             "fake_call_1",

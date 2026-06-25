@@ -417,6 +417,46 @@ python -m secminiagent --no-env "generate a RAG wind power threat report"
 
 ---
 
+## RAG Evaluation Benchmark
+
+SecMiniAgent includes a reproducible RAG benchmark for industrial security knowledge retrieval. It compares retrieval quality across:
+
+- Backend: `local`, optional `chroma`
+- Top-K: `1`, `3`, `5`, `8`
+- Query strategy: `description_only`, `description_port`, `description_port_hint`
+- Metrics: `recall@k`, `precision@k`, `mrr`, `hit_rate`
+
+Run the local benchmark:
+
+```powershell
+python -m secminiagent --no-env "evaluate rag benchmark"
+```
+
+Latest local benchmark result:
+
+| Backend | Query Strategy | Top-K | Recall@K | Precision@K | MRR | Hit Rate |
+|---|---|---:|---:|---:|---:|---:|
+| local | description_only | 1 | 0.5000 | 0.7500 | 0.7500 | 0.7500 |
+| local | description_only | 3 | 0.7500 | 0.3750 | 0.8125 | 0.8750 |
+| local | description_only | 5 | 0.9375 | 0.2750 | 0.8438 | 1.0000 |
+| local | description_only | 8 | 1.0000 | 0.1875 | 0.8438 | 1.0000 |
+| local | description_port | 1 | 0.3125 | 0.5000 | 0.5000 | 0.5000 |
+| local | description_port | 3 | 0.7500 | 0.3750 | 0.6667 | 0.8750 |
+| local | description_port | 5 | 0.9375 | 0.2750 | 0.6917 | 1.0000 |
+| local | description_port | 8 | 0.9375 | 0.1719 | 0.6917 | 1.0000 |
+| local | description_port_hint | 1 | 0.5000 | 0.7500 | 0.7500 | 0.7500 |
+| local | description_port_hint | 3 | 0.8125 | 0.4167 | 0.8125 | 0.8750 |
+| local | description_port_hint | 5 | 1.0000 | 0.3000 | 0.8375 | 1.0000 |
+| local | description_port_hint | 8 | 1.0000 | 0.1875 | 0.8375 | 1.0000 |
+
+Interpretation:
+
+- `description_port_hint` generally improves industrial protocol retrieval because it adds OT protocol context such as Modbus TCP/502 or OPC UA TCP/4840.
+- Higher `top_k` can improve recall while lowering precision.
+- Chroma can be enabled with `python -m pip install -e ".[chroma]"` and selected with `backend=chroma` or `backend=all`.
+
+---
+
 ## 配置真实模型
 
 默认 provider 是 `fake`，不需要 API Key。

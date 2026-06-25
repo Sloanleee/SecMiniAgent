@@ -5,18 +5,13 @@ from datetime import datetime, timezone
 from typing import Any
 
 from secminiagent.parsers.alert_csv_parser import parse_alerts_csv
+from secminiagent.rag.query import OT_PORT_HINTS
 from secminiagent.rag.retriever import KnowledgeRetriever
 from secminiagent.threat.alerts import SecurityAlert
 
 from .base import BaseTool, ToolContext, ToolResult, truncate_text
 from .file_tools import resolve_workspace_path
 
-
-OT_PORT_HINTS = {
-    502: "Modbus PLC industrial control protocol suspicious OT access",
-    102: "S7comm Siemens PLC industrial control protocol access",
-    4840: "OPC UA industrial data exchange OT access",
-}
 
 DEFAULT_RAG_ALERTS_PATH = "examples/wind_power/alerts.csv"
 DEFAULT_RAG_KNOWLEDGE_PATH = "knowledge"

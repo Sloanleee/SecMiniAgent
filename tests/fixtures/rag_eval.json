@@ -1,10 +1,86 @@
 [
   {
-    "query": "high severity tcp traffic to port 502 in OT network",
-    "expected_doc_ids": ["protocols/modbus", "playbooks/suspicious_ot_access"]
+    "id": "modbus_plc_access",
+    "description": "Office host accessed PLC Modbus service.",
+    "destination_port": 502,
+    "protocol": "tcp",
+    "severity": "high",
+    "expected_doc_ids": [
+      "knowledge/protocols/modbus.md",
+      "knowledge/rules/ot_rules.md"
+    ]
   },
   {
-    "query": "remote maintenance access to wind farm SCADA",
-    "expected_doc_ids": ["wind_power/remote_maintenance_risks", "wind_power/wind_farm_security_context"]
+    "id": "opcua_scada_access",
+    "description": "Unexpected OPC UA session to SCADA data service.",
+    "destination_port": 4840,
+    "protocol": "tcp",
+    "severity": "medium",
+    "expected_doc_ids": [
+      "knowledge/protocols/opcua.md"
+    ]
+  },
+  {
+    "id": "s7comm_plc_access",
+    "description": "Engineering workstation reached Siemens PLC service.",
+    "destination_port": 102,
+    "protocol": "tcp",
+    "severity": "high",
+    "expected_doc_ids": [
+      "knowledge/protocols/s7comm.md"
+    ]
+  },
+  {
+    "id": "rdp_bruteforce_jump_host",
+    "description": "Repeated RDP access attempts against remote maintenance jump host.",
+    "destination_port": 3389,
+    "protocol": "tcp",
+    "severity": "high",
+    "expected_doc_ids": [
+      "knowledge/playbooks/brute_force_response.md",
+      "knowledge/wind_power/remote_maintenance_risks.md"
+    ]
+  },
+  {
+    "id": "office_to_ot",
+    "description": "Office network host accessed a critical OT controller.",
+    "destination_port": 502,
+    "protocol": "tcp",
+    "severity": "high",
+    "expected_doc_ids": [
+      "knowledge/rules/ot_rules.md",
+      "knowledge/playbooks/suspicious_ot_access.md"
+    ]
+  },
+  {
+    "id": "remote_maintenance_risk",
+    "description": "Remote maintenance access path reached wind farm control network.",
+    "destination_port": 3389,
+    "protocol": "tcp",
+    "severity": "high",
+    "expected_doc_ids": [
+      "knowledge/wind_power/remote_maintenance_risks.md"
+    ]
+  },
+  {
+    "id": "lateral_movement",
+    "description": "One source reached multiple OT assets in a short time window.",
+    "destination_port": 445,
+    "protocol": "tcp",
+    "severity": "medium",
+    "expected_doc_ids": [
+      "knowledge/playbooks/lateral_movement_response.md"
+    ]
+  },
+  {
+    "id": "wind_farm_scada",
+    "description": "Unexpected network access to wind farm SCADA monitoring service.",
+    "destination_port": 4840,
+    "protocol": "tcp",
+    "severity": "medium",
+    "expected_doc_ids": [
+      "knowledge/wind_power/wind_farm_security_context.md",
+      "knowledge/protocols/opcua.md"
+    ]
   }
 ]

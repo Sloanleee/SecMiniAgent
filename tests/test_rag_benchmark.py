@@ -35,6 +35,38 @@ class RagBackendTest(unittest.TestCase):
             self.assertTrue(results[0].doc_id.endswith("protocols/modbus.md"))
             self.assertIn("Modbus", results[0].text)
 
+    def test_chroma_backend_without_dependency_has_friendly_error(self):
+        import importlib.util
+
+        if importlib.util.find_spec("chromadb") is not None:
+            self.skipTest("chromadb is installed; missing dependency path is not applicable")
+
+        with self.assertRaisesRegex(RuntimeError, "Chroma backend requires chromadb"):
+            create_backend("chroma", persist_path=Path(".secminiagent/rag/chroma"))
+
+    def test_chroma_backend_ingests_and_searches_when_installed(self):
+        import importlib.util
+
+        if importlib.util.find_spec("chromadb") is None:
+            self.skipTest("chromadb is not installed")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            knowledge = root / "knowledge"
+            (knowledge / "protocols").mkdir(parents=True)
+            (knowledge / "protocols" / "modbus.md").write_text(
+                "# Modbus\n\nModbus commonly uses TCP port 502 for PLC communication.\n",
+                encoding="utf-8",
+            )
+            backend = create_backend("chroma", persist_path=root / ".secminiagent" / "rag" / "chroma")
+
+            count = backend.ingest_path(knowledge)
+            results = backend.search("PLC Modbus TCP 502", top_k=1)
+
+            self.assertEqual(count, 1)
+            self.assertEqual(len(results), 1)
+            self.assertTrue(results[0].doc_id.endswith("protocols/modbus.md"))
+
 
 class RagBenchmarkEngineTest(unittest.TestCase):
     def test_run_local_benchmark(self):

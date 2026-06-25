@@ -7,6 +7,9 @@ requires-python = ">=3.11"
 authors = [{ name = "SecMiniAgent" }]
 dependencies = []
 
+[project.optional-dependencies]
+chroma = ["chromadb>=0.5.0"]
+
 [project.scripts]
 secminiagent = "secminiagent.cli:main"
 

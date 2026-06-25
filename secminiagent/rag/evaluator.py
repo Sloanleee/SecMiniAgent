@@ -11,6 +11,17 @@ def recall_at_k(results: list[list[str]], expected: list[set[str]], *, k: int) -
     return total / len(expected)
 
 
+def precision_at_k(results: list[list[str]], expected: list[set[str]], *, k: int) -> float:
+    if not results:
+        return 0.0
+    total = 0.0
+    for result_ids, expected_ids in zip(results, expected):
+        top = result_ids[:k]
+        if top and expected_ids:
+            total += len(expected_ids.intersection(top)) / len(top)
+    return total / len(results)
+
+
 def hit_rate(results: list[list[str]], expected: list[set[str]], *, k: int) -> float:
     if not expected:
         return 0.0

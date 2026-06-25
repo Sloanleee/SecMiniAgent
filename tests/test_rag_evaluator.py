@@ -34,6 +34,22 @@ class RagEvaluatorTest(unittest.TestCase):
 
         self.assertEqual(hit_rate(results, expected, k=1), 0.5)
 
+    def test_precision_at_k(self):
+        from secminiagent.rag.evaluator import precision_at_k
+
+        results = [["protocol_modbus", "wrong"], ["playbook", "wrong"]]
+        expected = [{"protocol_modbus"}, {"missing"}]
+
+        self.assertEqual(precision_at_k(results, expected, k=2), 0.25)
+
+    def test_precision_at_k_uses_returned_result_count_when_shorter_than_k(self):
+        from secminiagent.rag.evaluator import precision_at_k
+
+        results = [["protocol_modbus"], []]
+        expected = [{"protocol_modbus", "s7comm"}, {"missing"}]
+
+        self.assertEqual(precision_at_k(results, expected, k=3), 0.5)
+
 
 if __name__ == "__main__":
     unittest.main()

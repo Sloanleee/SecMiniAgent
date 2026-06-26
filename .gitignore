@@ -4,6 +4,7 @@
 __pycache__/
 .pytest_cache/
 .secminiagent/
+.secminiagent/rag
 *.py[cod]
 *.pyc
 .pytest_cache/

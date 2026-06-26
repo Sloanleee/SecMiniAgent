@@ -47,6 +47,18 @@ class FakeLLMRagBenchmarkRoutingTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.tool_calls[0].name, "evaluate_rag")
         self.assertEqual(response.tool_calls[0].arguments["backend"], "all")
 
+    async def test_rag_benchmark_locally_prompt_does_not_match_all_substring(self):
+        client = FakeLLMClient()
+
+        response = await client.complete(
+            messages=[client.user_message("evaluate rag benchmark locally")],
+            tools=[],
+            system_prompt="",
+        )
+
+        self.assertEqual(response.tool_calls[0].name, "evaluate_rag")
+        self.assertEqual(response.tool_calls[0].arguments["backend"], "local")
+
 
 class RagBackendTest(unittest.TestCase):
     def test_create_local_backend(self):

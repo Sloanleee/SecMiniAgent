@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from .base import LLMResponse, Message, ToolCall
@@ -115,9 +116,9 @@ def _tool_call_for_prompt(prompt: str) -> ToolCall | None:
         )
     if any(word in prompt for word in ["evaluate rag", "rag benchmark", "rag evaluation"]):
         benchmark_backend = "local"
-        if "all" in prompt:
+        if _has_word(prompt, "all"):
             benchmark_backend = "all"
-        elif "chroma" in prompt:
+        elif _has_word(prompt, "chroma"):
             benchmark_backend = "chroma"
         return ToolCall(
             "fake_call_1",
@@ -155,6 +156,10 @@ def _tool_call_for_prompt(prompt: str) -> ToolCall | None:
     if any(word in prompt for word in ["structure", "files", "directory"]):
         return ToolCall("fake_call_1", "list_dir", {"path": "."})
     return None
+
+
+def _has_word(text: str, word: str) -> bool:
+    return re.search(rf"\b{re.escape(word)}\b", text) is not None
 
 
 def _summarize_tool_result(tool_result: str) -> str:

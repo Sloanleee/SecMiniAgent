@@ -4,11 +4,14 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Hashable, Iterable, TypeVar
 
 from secminiagent.rag.backends import create_backend
 from secminiagent.rag.evaluator import hit_rate, mrr, precision_at_k, recall_at_k
 from secminiagent.rag.query import build_query
+
+
+T = TypeVar("T", bound=Hashable)
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,6 +67,9 @@ def run_rag_benchmark(
 def render_benchmark_markdown(rows: list[BenchmarkRow], *, eval_path: str, knowledge_path: str) -> str:
     now = datetime.now(timezone.utc).isoformat()
     sample_count = rows[0].sample_count if rows else 0
+    backends = ", ".join(_unique_in_order(row.backend for row in rows))
+    top_k_values = ", ".join(str(item) for item in _unique_in_order(row.top_k for row in rows))
+    query_strategies = ", ".join(_unique_in_order(row.query_strategy for row in rows))
     lines = [
         "# RAG Evaluation Report",
         "",
@@ -74,6 +80,9 @@ def render_benchmark_markdown(rows: list[BenchmarkRow], *, eval_path: str, knowl
         f"- Evaluation dataset: `{eval_path}`",
         f"- Knowledge path: `{knowledge_path}`",
         f"- Sample count: {sample_count}",
+        f"- Backends: {backends}",
+        f"- Top-K values: {top_k_values}",
+        f"- Query strategies: {query_strategies}",
         "",
         "## Results",
         "",
@@ -93,3 +102,13 @@ def _load_eval_samples(path: Path) -> list[dict[str, Any]]:
     if not isinstance(data, list):
         raise ValueError("RAG eval dataset must be a JSON list.")
     return [item for item in data if isinstance(item, dict)]
+
+
+def _unique_in_order(items: Iterable[T]) -> list[T]:
+    values: list[T] = []
+    seen: set[T] = set()
+    for item in items:
+        if item not in seen:
+            seen.add(item)
+            values.append(item)
+    return values

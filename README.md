@@ -638,6 +638,7 @@ python -m unittest tests.test_rag_evaluator -v
 | 指标 | 说明 |
 | --- | --- |
 | `recall_at_k` | Top-K 检索结果中召回了多少应命中文档 |
+| `precision_at_k` | Top-K 检索结果中命中文档所占比例 |
 | `mrr` | 正确文档排名越靠前，分数越高 |
 | `hit_rate` | Top-K 内是否至少命中一个正确文档 |
 

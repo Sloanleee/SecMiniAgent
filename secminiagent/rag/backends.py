@@ -69,6 +69,10 @@ class ChromaRagBackend:
             ) from exc
         self.persist_path = persist_path or Path(".secminiagent") / "rag" / "chroma"
         self.client = chromadb.PersistentClient(path=str(self.persist_path))
+        try:
+            self.client.delete_collection(collection_name)
+        except Exception:
+            pass
         self.collection = self.client.get_or_create_collection(collection_name)
 
     def ingest_path(self, path: Path) -> int:

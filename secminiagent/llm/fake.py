@@ -114,13 +114,18 @@ def _tool_call_for_prompt(prompt: str) -> ToolCall | None:
             {"alerts_path": "examples/industrial/ids_alerts.json", "ioc_path": "examples/industrial/ioc.txt"},
         )
     if any(word in prompt for word in ["evaluate rag", "rag benchmark", "rag evaluation"]):
+        benchmark_backend = "local"
+        if "all" in prompt:
+            benchmark_backend = "all"
+        elif "chroma" in prompt:
+            benchmark_backend = "chroma"
         return ToolCall(
             "fake_call_1",
             "evaluate_rag",
             {
                 "eval_path": "tests/fixtures/rag_eval.json",
                 "knowledge_path": "knowledge",
-                "backend": "local",
+                "backend": benchmark_backend,
                 "top_k_values": [1, 3, 5, 8],
                 "query_strategies": ["description_only", "description_port", "description_port_hint"],
             },

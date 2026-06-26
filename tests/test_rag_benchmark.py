@@ -134,7 +134,7 @@ class RagBackendTest(unittest.TestCase):
         if importlib.util.find_spec("chromadb") is None:
             self.skipTest("chromadb is not installed")
 
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             root = Path(tmp)
             knowledge = root / "knowledge"
             (knowledge / "protocols").mkdir(parents=True)

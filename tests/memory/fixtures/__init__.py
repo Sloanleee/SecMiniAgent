@@ -1,0 +1,1 @@
+"""Synthetic-only memory fixtures."""

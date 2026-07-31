@@ -58,53 +58,73 @@ class AgentLoop:
         self.context_manager = context_manager or ContextManager(max_chars=config.max_context_chars)
         self.event_handler = event_handler
         self.skills = skills or []
+        self._memory_directive = ""
 
     async def run(self, prompt: str) -> AgentResult:
+        begin_run = getattr(self.session, "begin_run", None)
+        if begin_run is not None:
+            begin_run()
         user_message = self.client.user_message(prompt)
         self.session.record_message(user_message)
         final_text = ""
+        try:
+            for turn in range(1, self.config.max_turns + 1):
+                await self._emit("model_start", {"turn": turn, "provider": self.config.provider, "model": self.config.model})
+                prepare_context = getattr(self.session, "prepare_context", None)
+                if prepare_context is not None:
+                    prepared, self._memory_directive = prepare_context(self.config.max_context_chars)
+                else:
+                    prepared = self.context_manager.prepare(self.session.messages)
+                    self._memory_directive = ""
+                response = await self._complete(prepared)
+                await self._emit("model_done", {"turn": turn, "has_tool_calls": bool(response.tool_calls)})
+                if response.content and not hasattr(self.client, "stream_complete"):
+                    await self._emit("assistant_delta", {"text": response.content})
+                self.session.record_message(response.assistant_message)
+                final_text = response.content
 
-        for turn in range(1, self.config.max_turns + 1):
-            await self._emit("model_start", {"turn": turn, "provider": self.config.provider, "model": self.config.model})
-            prepared = self.context_manager.prepare(self.session.messages)
-            response = await self._complete(prepared)
-            await self._emit("model_done", {"turn": turn, "has_tool_calls": bool(response.tool_calls)})
-            if response.content and not hasattr(self.client, "stream_complete"):
-                await self._emit("assistant_delta", {"text": response.content})
-            self.session.record_message(response.assistant_message)
-            final_text = response.content
+                if not response.tool_calls:
+                    complete_run = getattr(self.session, "complete_run", None)
+                    if complete_run is not None:
+                        complete_run()
+                    return AgentResult(final_text=final_text, turns=turn, session_id=self.session.id)
 
-            if not response.tool_calls:
-                return AgentResult(final_text=final_text, turns=turn, session_id=self.session.id)
+                for call in response.tool_calls:
+                    await self._emit("tool_start", {"id": call.id, "name": call.name, "arguments": call.arguments})
+                    tool_result = await self.registry.execute(call.name, call.arguments, self._tool_context())
+                    await self._emit(
+                        "tool_done",
+                        {
+                            "id": call.id,
+                            "name": call.name,
+                            "success": tool_result.success,
+                            "output_chars": len(tool_result.output),
+                        },
+                    )
+                    self.session.record(
+                        "tool_call",
+                        {
+                            "id": call.id,
+                            "name": call.name,
+                            "arguments": call.arguments,
+                            "success": tool_result.success,
+                        },
+                    )
+                    self.session.record_message(self.client.tool_result_message(call, tool_result.to_text()))
 
-            for call in response.tool_calls:
-                await self._emit("tool_start", {"id": call.id, "name": call.name, "arguments": call.arguments})
-                tool_result = await self.registry.execute(call.name, call.arguments, self._tool_context())
-                await self._emit(
-                    "tool_done",
-                    {
-                        "id": call.id,
-                        "name": call.name,
-                        "success": tool_result.success,
-                        "output_chars": len(tool_result.output),
-                    },
-                )
-                self.session.record(
-                    "tool_call",
-                    {
-                        "id": call.id,
-                        "name": call.name,
-                        "arguments": call.arguments,
-                        "success": tool_result.success,
-                    },
-                )
-                self.session.record_message(self.client.tool_result_message(call, tool_result.to_text()))
-
-        return AgentResult(
-            final_text=final_text or "Stopped because max_turns was reached.",
-            turns=self.config.max_turns,
-            session_id=self.session.id,
-        )
+            complete_run = getattr(self.session, "complete_run", None)
+            if complete_run is not None:
+                complete_run()
+            return AgentResult(
+                final_text=final_text or "Stopped because max_turns was reached.",
+                turns=self.config.max_turns,
+                session_id=self.session.id,
+            )
+        except Exception:
+            fail_run = getattr(self.session, "fail_run", None)
+            if fail_run is not None:
+                fail_run("AGENT_RUN_FAILED")
+            raise
 
     async def _complete(self, prepared_messages: list[dict[str, Any]]) -> LLMResponse:
         stream_complete = getattr(self.client, "stream_complete", None)
@@ -143,6 +163,7 @@ class AgentLoop:
                 SYSTEM_PROMPT,
                 f"Workspace: {self.config.cwd}",
                 f"Current plan:\n{self.plan_state.render()}",
+                self._memory_directive,
                 skill_text,
             ]
             if part

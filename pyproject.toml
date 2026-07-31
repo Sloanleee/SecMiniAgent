@@ -5,7 +5,7 @@ description = "A local security review agent CLI prototype."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "SecMiniAgent" }]
-dependencies = []
+dependencies = ["cryptography>=43.0"]
 
 [project.optional-dependencies]
 chroma = ["chromadb>=0.5.0"]

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "private-key",
+    "content": "-----BEGIN PRIVATE KEY-----\nsynthetic-only\n-----END PRIVATE KEY-----",
+    "expected_action": "deny",
+    "expected_category": "private_key"
+  },
+  {
+    "id": "password",
+    "content": "password = \"Synthet1c-Only-Value\"",
+    "expected_action": "deny",
+    "expected_category": "credential_assignment"
+  },
+  {
+    "id": "connection-string",
+    "content": "postgresql://demo_user:Synthet1cPass@db.internal/example",
+    "expected_action": "deny",
+    "expected_category": "connection_string"
+  },
+  {
+    "id": "placeholder",
+    "content": "token = \"<YOUR_TOKEN>\"",
+    "expected_action": "allow",
+    "expected_category": "placeholder"
+  },
+  {
+    "id": "internal-ot",
+    "content": "PLC-01 is reachable at 172.16.20.10.",
+    "expected_action": "require_confirmation",
+    "expected_category": "internal_ip"
+  },
+  {
+    "id": "hash",
+    "content": "IOC sha256: a3f1c2d4e5b60718293a4b5c6d7e8f90123456789abcdef00112233445566778",
+    "expected_action": "allow",
+    "expected_category": null
+  },
+  {
+    "id": "uuid",
+    "content": "event id: 550e8400-e29b-41d4-a716-446655440000",
+    "expected_action": "allow",
+    "expected_category": null
+  }
+]
